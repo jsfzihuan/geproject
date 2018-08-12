@@ -49,8 +49,8 @@ dataset1 = data.frame(cbind(lonlat,dataset))
 names(dataset1)=c("lon","lat","level","time",
                       "w","d","r","t","q","vo","v")
 
-dataset1$lon=as.numeric(dataset1$lon)
-dataset1$lat=as.numeric(dataset1$lat)
+ dataset1$lon=as.numeric(as.character(dataset1$lon))
+ dataset1$lat=as.numeric(as.character(dataset1$lat))
 dataset1$time=as.character(dataset1$time)
 
 dataset1=transform(dataset1,
@@ -80,20 +80,45 @@ test_prec$timehour=substr(as.character(test_prec$timehour),1,2)
 #                     hour=hour(timehour))
 
 
+# from OBS to the gridded 
 
-# extract the data for the same
-
-for (i in levels(factor(test_prec$timeday))) {
-  for (j in levels(factor(test_prec$timehour))) {
-    position=which(dataset1$daytime==i & dataset1$hourtime==j)
-    for (k in 1:length(position)) {
-      dataset1[position[k],14]= "1"
-      #dataset1[position[m],14]= "1"
+for (m in 1:length(test_prec$jingdu)) {
+  for (i in 1:(length(x)-1)) {
+    if (test_prec$jingdu[m] >= x[i] & test_prec$jingdu[m] < x[i+1]) {
+      test_prec$lon1[m]=x[i]
     }
   }
 }
 
-dataset1[is.na(dataset1$V14)] == "0"
+for (i in 1:(length(y)-1)) {
+  for (m in 1:length(test_prec$weidu)) {
+    if (test_prec$weidu[m] < y[i] & test_prec$weidu[m] >= y[i+1]) {
+      test_prec$lat1[m]=y[i]
+    }
+  }
+}
+
+# extract the data for the same
+lat_levels=test_prec$lat1
+
+for (i in levels(factor(test_prec$timeday))) {
+  for (j in levels(factor(test_prec$timehour))) {
+    for (lat in 1:length(test_prec$lat1)) {
+      for (lon in 1: length(test_prec$lon1)) {
+        position=which(dataset1$daytime==i & dataset1$hourtime==j &
+                         dataset1$lat==test_prec$lat1[lat] &
+                         dataset1$lon==test_prec$lon1[lon])
+        
+        for (k in 1:length(position)) {
+          dataset1[position[k],14]= "1"
+          #dataset1[position[m],14]= "1"
+      }
+    }
+    }
+  }
+}
+
+# dataset1[is.na(dataset1$V14)] == "0"
 
 # factor(dataset1$V14,
 #        levels = c(NA,"1"),
